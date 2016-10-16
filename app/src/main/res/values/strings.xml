@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Tutu_test</string>
+    <string name="about">О приложении</string>
+    <string name="timetable">Расписание</string>
+    <string name="travel_date">Дата поездки</string>
+    <string name="dispatch_station">Станция отправления:</string>
+    <string name="arrival_station">Станция прибытия:</string>
+    <string name="show_timetable">Показать расписание</string>
+    <string name="press_to_choose_station">Нажмите для выбора станции</string>
+</resources>
