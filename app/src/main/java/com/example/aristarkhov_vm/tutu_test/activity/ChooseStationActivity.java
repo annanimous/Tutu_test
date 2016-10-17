@@ -11,22 +11,16 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.widget.EditText;
 
-
 import com.example.aristarkhov_vm.tutu_test.adapter.ItemAdapter;
 import com.example.aristarkhov_vm.tutu_test.application.TutuApplication;
-import com.example.aristarkhov_vm.tutu_test.model.CitiesFrom;
-import com.example.aristarkhov_vm.tutu_test.model.CitiesTo;
-import com.example.aristarkhov_vm.tutu_test.model.Country;
 import com.example.aristarkhov_vm.tutu_test.model.Station;
 import com.example.aristarkhov_vm.tutu_test.R;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
+
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -36,15 +30,14 @@ import com.jakewharton.rxbinding.widget.RxTextView;
 import com.jakewharton.rxbinding.widget.TextViewTextChangeEvent;
 
 public class ChooseStationActivity extends AppCompatActivity {
-    List<Country> cities = new ArrayList<>();
     private RecyclerView recyclerView;
     private List<Station> stationList = new ArrayList<>();
     private List<Station> stationFullList = new ArrayList<>();
     private ItemAdapter itemAdapter;
     AlertDialog.Builder ad;
     Context context;
-
-    @Bind(R.id.searchview) EditText inputSearchText;
+    EditText searchEditText;
+    Destination destination;
 
     private Subscription subscription;
 
@@ -52,7 +45,6 @@ public class ChooseStationActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         subscription.unsubscribe();
-        ButterKnife.unbind(this);
     }
 
 
@@ -60,21 +52,20 @@ public class ChooseStationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_station);
-        ButterKnife.bind(this);
-
+        searchEditText = (EditText) findViewById(R.id.searchEditText);
         Intent intent = getIntent();
-        Destination destination = (Destination) intent.getSerializableExtra("Destination");
+        destination = (Destination) intent.getSerializableExtra("Destination");
         if (destination == Destination.FROM) {
-            CitiesFrom citiesFrom = ((TutuApplication) this.getApplication()).getCitiesFrom();
-            Collections.addAll(cities, citiesFrom.getmCountry());
+            stationFullList = TutuApplication.getAppInstance().getStationFromFullList();
         }
         else if (destination == Destination.TO) {
-            CitiesTo citiesTo = ((TutuApplication) this.getApplication()).getCitiesTo();
-            Collections.addAll(cities, citiesTo.getmCountry());
+            stationFullList = TutuApplication.getAppInstance().getStationToFullList();
         }
+        stationList = stationFullList;
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         ViewCompat.setNestedScrollingEnabled(recyclerView, false);
+
         itemAdapter = new ItemAdapter(stationList, new ItemAdapter.OnItemClickListener() {
             @Override
             //С точки зрения удобства использования, предпочтительнее две разных кнопки для выбора станции и просмотра информации. упростил согласно условиям задачи
@@ -116,19 +107,13 @@ public class ChooseStationActivity extends AppCompatActivity {
         });
 
         recyclerView.setAdapter(itemAdapter);
-
-        for (int i = 0; i < cities.size(); i++)
-        {
-            stationFullList.addAll(cities.get(i).getStations());
-        }
-        stationList.addAll(stationFullList);
         itemAdapter.notifyDataSetChanged();
-        subscription = RxTextView.textChangeEvents(inputSearchText)
+        subscription = RxTextView.textChangeEvents(searchEditText)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .filter(new Func1<TextViewTextChangeEvent, Boolean>() {
                     @Override
                     public Boolean call(TextViewTextChangeEvent changes) {
-                        return inputSearchText.getText().toString() != null;
+                        return searchEditText.getText().toString() != null;
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
@@ -148,7 +133,6 @@ public class ChooseStationActivity extends AppCompatActivity {
 
             @Override
             public void onNext(TextViewTextChangeEvent onTextChangeEvent) {
-                itemAdapter.clear();
                 stationList = findStationByName(onTextChangeEvent.text().toString());
                 itemAdapter.refresh(stationList);
             }
@@ -156,7 +140,7 @@ public class ChooseStationActivity extends AppCompatActivity {
     }
 
     /**
-     * @param searchString
+     * @param searchString строка поиска
      * @return
      * Фильтрование списка станций
      */
@@ -171,6 +155,7 @@ public class ChooseStationActivity extends AppCompatActivity {
         }
         return returnList;
     }
+
 }
 
 
