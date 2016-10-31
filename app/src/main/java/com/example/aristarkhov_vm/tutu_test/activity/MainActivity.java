@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
+            downloadfile();
             String jsonString = "";
             try {
                 AssetManager assetManager = getBaseContext().getAssets();
@@ -110,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
             }
             TutuApplication.getAppInstance().setStationToFullList(stationToFullList);
             return null;
+        }
+
+        private void downloadfile() {
         }
 
         @Override

@@ -3,19 +3,26 @@ package com.example.aristarkhov_vm.tutu_test.activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.widget.EditText;
 
 import com.example.aristarkhov_vm.tutu_test.adapter.ItemAdapter;
 import com.example.aristarkhov_vm.tutu_test.application.TutuApplication;
+import com.example.aristarkhov_vm.tutu_test.model.CitiesFrom;
+import com.example.aristarkhov_vm.tutu_test.model.CitiesTo;
 import com.example.aristarkhov_vm.tutu_test.model.Station;
 import com.example.aristarkhov_vm.tutu_test.R;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +33,7 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 
+import com.google.gson.Gson;
 import com.jakewharton.rxbinding.widget.RxTextView;
 import com.jakewharton.rxbinding.widget.TextViewTextChangeEvent;
 
@@ -38,7 +46,7 @@ public class ChooseStationActivity extends AppCompatActivity {
     Context context;
     EditText searchEditText;
     Destination destination;
-
+    LoadStation loadStation;
     private Subscription subscription;
 
     @Override
@@ -55,13 +63,15 @@ public class ChooseStationActivity extends AppCompatActivity {
         searchEditText = (EditText) findViewById(R.id.searchEditText);
         Intent intent = getIntent();
         destination = (Destination) intent.getSerializableExtra("Destination");
-        if (destination == Destination.FROM) {
+        loadStation = new LoadStation();
+        loadStation.execute();
+        /*if (destination == Destination.FROM) {
             stationFullList = TutuApplication.getAppInstance().getStationFromFullList();
         }
         else if (destination == Destination.TO) {
             stationFullList = TutuApplication.getAppInstance().getStationToFullList();
         }
-        stationList = stationFullList;
+        stationList = stationFullList;*/
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         ViewCompat.setNestedScrollingEnabled(recyclerView, false);
@@ -106,8 +116,8 @@ public class ChooseStationActivity extends AppCompatActivity {
             }
         });
 
-        recyclerView.setAdapter(itemAdapter);
-        itemAdapter.notifyDataSetChanged();
+        /*recyclerView.setAdapter(itemAdapter);
+        itemAdapter.notifyDataSetChanged();*/
         subscription = RxTextView.textChangeEvents(searchEditText)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .filter(new Func1<TextViewTextChangeEvent, Boolean>() {
@@ -155,7 +165,33 @@ public class ChooseStationActivity extends AppCompatActivity {
         }
         return returnList;
     }
+    class LoadStation extends AsyncTask<Void, Void, Void> {
 
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            if (destination == Destination.FROM) {
+                stationFullList = TutuApplication.getAppInstance().getStationFromFullList();
+            }
+            else if (destination == Destination.TO) {
+                stationFullList = TutuApplication.getAppInstance().getStationToFullList();
+            }
+            stationList = stationFullList;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            recyclerView.setAdapter(itemAdapter);
+            itemAdapter.notifyDataSetChanged();
+        }
+    }
 }
 
 
